@@ -1,5 +1,4 @@
-import jquery from 'jquery';
-const $ = jquery;
+// No need to import anything since we won't use jQuery anymore
 
 class PreviewIframe {
   constructor(url) {
