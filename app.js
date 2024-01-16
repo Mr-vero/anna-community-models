@@ -89,5 +89,5 @@ async function initPreview(url: string): Promise<DocumentWithCalcHeight> {
 }
 
 (() => {
-  initPreview('https://oatweb1.myshopify.com/').then((doc) => console.log('Initialized successfully.', doc));
+  initPreview('https://mrvero-notux-chat-ui.hf.space').then((doc) => console.log('Initialized successfully.', doc));
 })();
