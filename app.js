@@ -21,7 +21,7 @@ class PreviewIframe {
 }
 
 async function initPreview(url) {
-  const response = await fetch(`${url}/?embedded=true&theme_snippet=_layout.liquid`, { method: 'GET' });
+  const response = await fetch(`${url}`, { method: 'GET' });
   const text = await response.text();
   const parser = new DOMParser();
   const doc = parser.parseFromString(text, 'text/html');
