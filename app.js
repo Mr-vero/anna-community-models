@@ -1,49 +1,8 @@
-import $ from 'jquery';
-
-interface DocumentWithCalcHeight extends Document {
-  calcHeight(): void;
-}
-
-function setupMetadata(doc: Document): void {
-  doc.charset = 'utf-8';
-  $(doc.head).append(`<meta name="viewport" content="width=device-width,initial-scale=1.0">`);
-}
-
-function addStyles(doc: Document): void {
-  $(doc.head).append(`
-    <style>
-      html, body {
-        width: 100%;
-        height: 100%;
-        padding: 0px;
-        margin: 0px;
-        overflow: hidden;
-        font-family: arial;
-        font-size: 10px;
-        color: #6e6e6e;
-        background-color: #000;
-      }
-      #preview-frame {
-        width: 100%;
-        background-color: #fff;
-      }
-    </style>
-  `);
-}
-
-function loadLibrary(doc: Document, url: string): Promise<void> {
-  return new Promise((resolve) => {
-    const script = doc.createElement('script');
-    script.src = url;
-    script.onload = resolve;
-    doc.head.appendChild(script);
-  });
-}
+import jquery from 'jquery';
+const $ = jquery;
 
 class PreviewIframe {
-  private readonly iframe_: HTMLIFrameElement;
-
-  constructor(url: string) {
+  constructor(url) {
     this.iframe_ = document.createElement('iframe');
     this.iframe_.id = 'preview-frame';
     this.iframe_.src = url;
@@ -52,42 +11,55 @@ class PreviewIframe {
     this.iframe_.setAttribute('noresize', 'noresize');
   }
 
-  public appendToBody(doc: Document): void {
-    doc.body.appendChild(this.iframe_);
+  appendToBody() {
+    document.querySelector('#app').appendChild(this.iframe_);
   }
 
-  public calculateHeight(doc: DocumentWithCalcHeight): void {
-    const previewFrame = doc.getElementById('preview-frame') as HTMLIFrameElement;
+  calculateHeight() {
+    const previewFrame = document.getElementById('preview-frame');
     previewFrame.style.height = `${window.innerHeight}px`;
   }
 }
 
-async function initPreview(url: string): Promise<DocumentWithCalcHeight> {
-  const doc = document.implementation.createHTMLDocument('Untitled');
+async function initPreview(url) {
+  const response = await fetch(`${url}/?embedded=true&theme_snippet=_layout.liquid`, { method: 'GET' });
+  const text = await response.text();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(text, 'text/html');
 
-  setupMetadata(doc);
-  addStyles(doc);
-
-  await loadLibrary(doc, '//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js');
+  // Add styles here instead of manipulating head elements due to CORS restrictions
+  const styleContent = `
+    html, body {
+      width: 100%;
+      height: 100%;
+      padding: 0px;
+      margin: 0px;
+      overflow: hidden;
+      font-family: arial;
+      font-size: 10px;
+      color: #6e6e6e;
+      background-color: #000;
+    }
+    #preview-frame {
+      width: 100%;
+      background-color: #fff;
+    }
+  `;
+  const styleEl = document.createElement('style');
+  styleEl.innerHTML = styleContent;
+  document.head.appendChild(styleEl);
 
   const iframe = new PreviewIframe(url);
-  iframe.appendToBody(doc);
-
-  doc.calcHeight = (): void => {
-    iframe.calculateHeight(doc);
-  };
+  iframe.appendToBody();
+  iframe.calculateHeight();
 
   window.addEventListener('resize', () => {
-    doc.calcHeight();
+    iframe.calculateHeight();
   });
 
   window.addEventListener('load', () => {
-    doc.calcHeight();
+    iframe.calculateHeight();
   });
-
-  return doc;
 }
 
-(() => {
-  initPreview('https://mrvero-notux-chat-ui.hf.space').then((doc) => console.log('Initialized successfully.', doc));
-})();
+initPreview('https://mrvero-notux-chat-ui.hf.space/');
